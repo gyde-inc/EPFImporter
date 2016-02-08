@@ -38,6 +38,7 @@
 # ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import EPFIngester
+import EPFParser
 import MySQLdb
 import os
 import sys
@@ -127,7 +128,8 @@ def doImport(directoryPath,
             allowExtensions=False,
             skipKeyViolators=False,
             recordDelim='\x02\n',
-            fieldDelim='\x01'):
+            fieldDelim='\x01',
+            filters={}):
     """
     Perform a full import of the EPF files in the directory specified by directoryPath.
 
@@ -208,7 +210,8 @@ def doImport(directoryPath,
                 dbPassword=dbPassword,
                 dbName=dbName,
                 recordDelim=recordDelim,
-                fieldDelim=fieldDelim)
+                fieldDelim=fieldDelim,
+                filter=filters.get(fName))
         except Exception, e:
             LOGGER.error("Unable to create EPFIngester for %s", fName)
             LOGGER.exception(e)
@@ -246,7 +249,8 @@ def resumeImport(currentDict,
         dbName='epf',
         skipKeyViolators=False,
         recordDelim='\x02\n',
-        fieldDelim='\x01'):
+        fieldDelim='\x01',
+        filters={}):
     """
     Resume an interrupted full import based on the values in currentDict, which will normally
     be the currentDict unarchived from the EPFSnapshot.json file.
@@ -268,7 +272,8 @@ def resumeImport(currentDict,
         whiteList=wList,
         blackList=bList,
         recordDelim=recordDelim,
-        fieldDelim=fieldDelim)
+        fieldDelim=fieldDelim,
+        filters=filters)
     return failedFiles
 
 
@@ -365,6 +370,14 @@ def main():
     with open(configPath) as configFile:
         configDict = json.load(configFile)
 
+    filters = {}
+    configFilter = configDict['filters']
+    if configFilter:
+        for table, filterOptions in configFilter.iteritems():
+            filters[table] = EPFParser.InclusionRowFilter(filterOptions)
+
+    print(filters)
+
     #iterate through the options dict.
     #For each entry which is None, replace it with the value from the config file
     optDict = options.__dict__
@@ -405,7 +418,8 @@ def main():
             dbName=options.dbName,
             skipKeyViolators=options.skipKeyViolators,
             recordDelim=recordSep,
-            fieldDelim=fieldSep)
+            fieldDelim=fieldSep,
+            filters=filters)
         if failedFiles:
             dirName = os.path.basename(currentDict['dirPath'])
             failedFilesDict[dirName] = failedFiles
@@ -432,7 +446,8 @@ def main():
                 allowExtensions=allowExtensions,
                 skipKeyViolators=options.skipKeyViolators,
                 recordDelim=recordSep,
-                fieldDelim=fieldSep)
+                fieldDelim=fieldSep,
+                filters=filters)
 
             if failedFiles:
                 failedFilesDict[dirName] = failedFiles

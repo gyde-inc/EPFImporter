@@ -48,6 +48,32 @@ class SubstringNotFoundException(Exception):
     Exception thrown when a comment character or other tag is not found in a situation where it's required.
     """
 
+class RowFilter(object):
+
+    def __init__(self, params):
+        self.params = params
+        self.columnKeys = params.keys()
+
+    def configureParser(self, parser):
+        names = parser.columnNames
+        self.columnMapping = dict(zip(self.columnKeys, map(lambda x: names.index(x), self.columnKeys)))
+
+    def includeRow(self, row):
+        return True
+
+class InclusionRowFilter(RowFilter):
+
+    def includeRow(self, row):
+        for k, v in self.params.iteritems():
+            column = self.columnMapping[k]
+            if column is None:
+                return False
+            if not row[column] in v:
+                return False
+        return True
+
+
+
 
 class Parser(object):
     """
@@ -85,6 +111,7 @@ class Parser(object):
         self.commentChar = Parser.commentChar
         self.recordDelim = recordDelim
         self.fieldDelim = fieldDelim
+        self.filter = RowFilter({})
 
         self.eFile = codecs.open(filePath, mode="r", encoding="utf-8") #this will throw an exception if filePath does not exist
 
@@ -144,6 +171,10 @@ class Parser(object):
         #Build a dictionary of column names to data types
         self.typeMap = dict(zip(self.columnNames, self.dataTypes))
 
+    def setFilter(self, filter):
+        print("Filtering", filter)
+        filter.configureParser(self)
+        self.filter = filter
 
     def setSeekPos(self, pos=0):
         """
@@ -241,8 +272,16 @@ class Parser(object):
         str = rowString.partition(self.recordDelim)[0]
         return str.split(self.fieldDelim)
 
-
     def nextRecord(self):
+        while True:
+            record = self.nextRecordMinusFilter()
+            if record is None:
+                return None
+            elif self.filter.includeRow(record):
+                return record
+            # Otherwise, we repeat + fetch the next row...
+
+    def nextRecordMinusFilter(self):
         """
         Returns the next row of data as a list, or None if we're out of data.
         """

@@ -12,5 +12,13 @@
     ], 
     "whiteList": [
         ".*?"
-    ]
+    ],
+    "filters": {
+        "video": {
+            "media_type_id": ["4", "6"]
+        },
+        "collection": {
+            "collection_type_id": ["6", "8"]
+        }
+    }
 }

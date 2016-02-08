@@ -41,6 +41,9 @@ import os
 import datetime
 import warnings
 import logging
+import codecs
+
+codecs.register(lambda name: codecs.lookup('utf8') if name == 'utf8mb4' else None)
 
 DATETIME_FORMAT = "%y-%m-%d %H:%M:%S"
 
@@ -66,7 +69,8 @@ class Ingester(object):
             dbPassword='epf123',
             dbName='epf',
             recordDelim='\x02\n',
-            fieldDelim='\x01'):
+            fieldDelim='\x01',
+            filter=None):
         """
         """
         self.filePath = filePath
@@ -83,6 +87,8 @@ class Ingester(object):
         self.dbName = dbName
         self.lastRecordIngested = -1
         self.parser = EPFParser.Parser(filePath, recordDelim=recordDelim, fieldDelim=fieldDelim)
+        if filter is not None:
+            self.parser.setFilter(filter)
         self.startTime = None
         self.endTime = None
         self.abortTime = None
@@ -238,8 +244,8 @@ class Ingester(object):
         host=self.dbHost,
         user=self.dbUser,
         passwd=self.dbPassword,
-        db=self.dbName,
-        autocommit=True)
+        db=self.dbName)
+        conn.autocommit(True)
         return conn
 
 
@@ -304,6 +310,7 @@ class Ingester(object):
         lst = [" ".join(aPair) for aPair in colPairs] #list comprehension
         paramStr = ",".join(lst)
         #paramString now looks like "export_date BIGINT, storefront_id INT, country_code VARCHAR(100)" etc.
+        # cur.execute("SET GLOBAL innodb_file_format=Barracuda")
         exStr = """CREATE TABLE %s (%s) ROW_FORMAT=COMPRESSED""" % (tableName, paramStr)
         cur.execute(exStr) #create the table in the database
         #set the primary key
