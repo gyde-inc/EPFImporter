@@ -376,8 +376,6 @@ def main():
         for table, filterOptions in configFilter.iteritems():
             filters[table] = EPFParser.InclusionRowFilter(filterOptions)
 
-    print(filters)
-
     #iterate through the options dict.
     #For each entry which is None, replace it with the value from the config file
     optDict = options.__dict__
