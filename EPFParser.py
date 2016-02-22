@@ -172,7 +172,6 @@ class Parser(object):
         self.typeMap = dict(zip(self.columnNames, self.dataTypes))
 
     def setFilter(self, filter):
-        print("Filtering", filter)
         filter.configureParser(self)
         self.filter = filter
 

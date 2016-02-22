@@ -56,8 +56,8 @@ import errno
 VERSION = "1.2.1"
 DESCRIPTION = """EPFImporter is a tool for importing EPF files into a database."""
 
-CONFIG_PATH = "./EPFConfig.json"
-FLAT_CONFIG_PATH = "./EPFFlatConfig.json"
+CONFIG_PATH      = os.getenv("EPF_CONFIG_PATH", "./EPFConfig.json")
+FLAT_CONFIG_PATH = os.getenv("EPF_FLAT_CONFIG_PATH", "./EPFFlatConfig.json")
 
 #Snapshot is updated throughout the import; it is used for resuming interrupted imports
 global SNAPSHOT_PATH, SNAPSHOT_DICT
@@ -211,7 +211,7 @@ def doImport(directoryPath,
                 dbName=dbName,
                 recordDelim=recordDelim,
                 fieldDelim=fieldDelim,
-                filter=filters.get(fName))
+                filter=filters.get(fName, None))
         except Exception, e:
             LOGGER.error("Unable to create EPFIngester for %s", fName)
             LOGGER.exception(e)

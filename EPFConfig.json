@@ -8,7 +8,8 @@
     "tablePrefix": "epf", 
     "allowExtensions": false, 
     "blackList": [
-        "^\\."
+        "^\\.",
+        "\\Atype\\Z"
     ], 
     "whiteList": [
         ".*?"
