@@ -352,6 +352,8 @@ def main():
         help="""A regular expression to add to the whiteList; repeated -b arguments will append""")
     op.add_option('-k', '--skipkeyviolators', action='store_true', dest='skipKeyViolators', default=False,
         help="""Ignore inserts which would violate a primary key constraint; only applies to full imports""")
+    op.add_option('-P', '--paranoid', action='store_true', dest='paranoidFailure', default=False,
+        help="""Fails when any files fail.""")
 
     (options, args) = op.parse_args() #parse command-line options
 
@@ -457,6 +459,9 @@ def main():
         failedList = ["    %s/%s" % (str(aKey), str(failedFilesDict[aKey])) for aKey in failedFilesDict.keys()]
         failedString = "\n".join(failedList)
         LOGGER.warning("The following files encountered errors and were not imported:\n    %s", failedString)
+        if options.paranoidFailure:
+            sys.exit(1)
+
 
     LOGGER.info("Total import time for all directories: %s", ts[:len(ts)-4])
 
