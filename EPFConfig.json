@@ -20,6 +20,9 @@
         },
         "collection": {
             "collection_type_id": ["6", "8"]
+        },
+        "storefront": {
+            "country_code": ["AUS"]
         }
     }
 }
